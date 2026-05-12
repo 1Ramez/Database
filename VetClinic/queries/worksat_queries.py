@@ -52,7 +52,6 @@ def insert_worksat(vet_id, clinic_id):
     conn.commit()
     conn.close()
 
-
 def delete_worksat(vet_id, clinic_id):
     conn = get_connection()
     cursor = conn.cursor()

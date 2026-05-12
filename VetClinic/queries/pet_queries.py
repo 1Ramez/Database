@@ -41,13 +41,13 @@ def get_pets_by_owner(owner_id):
     return rows
 
 
-def insert_pet(pet_id, owner_id, name, breed, date_of_birth, gender, specie):
+def insert_pet(owner_id, name, breed, date_of_birth, gender, specie):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """INSERT INTO PET (PETID, OWNERID, P_NAME, BREED, DATEOFBIRTH, GENDER, SPECIE)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (pet_id, owner_id, name, breed, date_of_birth, gender, specie)
+        """INSERT INTO PET (OWNERID, P_NAME, BREED, DATEOFBIRTH, GENDER, SPECIE)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (owner_id, name, breed, date_of_birth, gender, specie)
     )
     conn.commit()
     conn.close()

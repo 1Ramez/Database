@@ -50,13 +50,13 @@ def get_vaccinations_by_note(note_id):
     return rows
 
 
-def insert_vaccination_record(record_id, note_id, vaccine_id, batch_num, date_next_booster, vaccine_type):
+def insert_vaccination_record( batch_num, date_next_booster, vaccine_type):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """INSERT INTO VACCINATIONRECORD (RECORDID, NOTEID, VACCINEID, BATCHNUM, DATENEXTBOOSTER, VACCINETYPE)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (record_id, note_id, vaccine_id, batch_num, date_next_booster, vaccine_type)
+        """INSERT INTO VACCINATIONRECORD (BATCHNUM, DATENEXTBOOSTER, VACCINETYPE)
+           VALUES (?, ?, ?)""",
+        ( batch_num, date_next_booster, vaccine_type)
     )
     conn.commit()
     conn.close()

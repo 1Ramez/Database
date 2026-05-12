@@ -21,16 +21,15 @@ def get_clinic_by_id(clinic_id):
     return row
 
 
-def insert_clinic(clinic_id, name, location, emergency_facilities):
+def insert_clinic(name, location, emergency_facilities):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO CLINIC (CLINICID, C_NAME, LOCATION, EMERGENCTDCALILITIES) VALUES (?, ?, ?, ?)",
-        (clinic_id, name, location, emergency_facilities)
+        "INSERT INTO CLINIC (C_NAME, LOCATION, EMERGENCTDCALILITIES) VALUES (?, ?, ?)",
+        (name, location, emergency_facilities)
     )
     conn.commit()
     conn.close()
-
 
 def update_clinic(clinic_id, name, location, emergency_facilities):
     conn = get_connection()

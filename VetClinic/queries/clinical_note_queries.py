@@ -41,13 +41,13 @@ def get_notes_by_vet(vet_id):
     return rows
 
 
-def insert_clinical_note(note_id, vet_id, weight, created_date, notes):
+def insert_clinical_note(VETID, weight, created_date, notes):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """INSERT INTO CLINICAL_NOTE (NOTEID, VETID, P_WEIGHT, CREATEDDATE, NOTES)
-           VALUES (?, ?, ?, ?, ?)""",
-        (note_id, vet_id, weight, created_date, notes)
+        """INSERT INTO CLINICAL_NOTE (VETID, P_WEIGHT, CREATEDDATE, NOTES)
+           VALUES (?, ?, ?, ?)""",
+        (VETID, weight, created_date, notes)
     )
     conn.commit()
     conn.close()

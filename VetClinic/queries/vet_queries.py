@@ -21,12 +21,12 @@ def get_vet_by_id(vet_id):
     return row
 
 
-def insert_vet(vet_id, name, phone, expertise):
+def insert_vet( name, phone, expertise):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO VETERINARIAN (VETID, V_NAME, PHONE, EXPERTISE) VALUES (?, ?, ?, ?)",
-        (vet_id, name, phone, expertise)
+        "INSERT INTO VETERINARIAN (V_NAME, PHONE, EXPERTISE) VALUES (?, ?, ?)",
+        (name, phone, expertise)
     )
     conn.commit()
     conn.close()

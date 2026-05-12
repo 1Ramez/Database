@@ -52,14 +52,14 @@ def get_visits_by_pet(pet_id):
     return rows
 
 
-def insert_visit(visit_id, clinic_id, pet_id, vet_id, visit_date, reason):
+def insert_visit( clinic_id, pet_id, vet_id, visit_date, reason):
     """Insert a new visit."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        """INSERT INTO VIST (VISTID, CLINICID, PETID, VETID, VISTDATE, REASON)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (visit_id, clinic_id, pet_id, vet_id, visit_date, reason)
+        """INSERT INTO VIST (CLINICID, PETID, VETID, VISTDATE, REASON)
+           VALUES (?, ?, ?, ?, ?)""",
+        ( clinic_id, pet_id, vet_id, visit_date, reason)
     )
     conn.commit()
     conn.close()

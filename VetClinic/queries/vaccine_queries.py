@@ -21,12 +21,12 @@ def get_vaccine_by_id(vaccine_id):
     return row
 
 
-def insert_vaccine(vaccine_id, vaccine_name):
+def insert_vaccine( vaccine_name):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO VACCINE (VACCINEID, VACCINENAME) VALUES (?, ?)",
-        (vaccine_id, vaccine_name)
+        "INSERT INTO VACCINE (VACCINENAME) VALUES (?)",
+        (vaccine_name,)
     )
     conn.commit()
     conn.close()

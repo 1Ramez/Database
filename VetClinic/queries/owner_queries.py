@@ -21,12 +21,12 @@ def get_owner_by_id(owner_id):
     return row
 
 
-def insert_owner(owner_id, name, billing_address, emergency_contact, phone):
+def insert_owner(name, billing_address, emergency_contact, phone):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO OWNER (OWNERID, O_NAME, BILLINGADDRESS, EMERGENCYCONTACT, PHONE) VALUES (?, ?, ?, ?, ?)",
-        (owner_id, name, billing_address, emergency_contact, phone)
+        "INSERT INTO OWNER (O_NAME, BILLINGADDRESS, EMERGENCYCONTACT, PHONE) VALUES (?, ?, ?, ?)",
+        (name, billing_address, emergency_contact, phone)
     )
     conn.commit()
     conn.close()
