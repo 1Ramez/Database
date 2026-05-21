@@ -6,6 +6,7 @@ import screens.lightMode_Style as _light
 import screens.darkMode_Style as theme
 
 from screens.dashboard import DashboardScreen
+from screens.chatbot import ChatbotScreen
 from screens.owners import OwnersScreen
 from screens.pets import PetsScreen
 from screens.clinics import ClinicsScreen
@@ -16,9 +17,11 @@ from screens.vaccines import VaccinesScreen
 from screens.workat import WorkatScreen
 from screens.clinical_notes import ClinicalNotesScreen
 from screens.inquiries import InquiriesScreen
+from screens.settings import SettingsScreen
 
 NAV_ITEMS = [
     ("Dashboard", "🏠", DashboardScreen),
+    ("AI Chat", "🤖", ChatbotScreen),
     ("Owners", "👤", OwnersScreen),
     ("Pets", "🐾", PetsScreen),
     ("Clinics", "🏥", ClinicsScreen),
@@ -29,6 +32,7 @@ NAV_ITEMS = [
     ("Works At", "🔗", WorkatScreen),
     ("Clinical Notes","📝", ClinicalNotesScreen),
     ("Reports", "📊", InquiriesScreen),
+    ("Settings", "⚙️", SettingsScreen),
 ]
 
 
@@ -153,8 +157,15 @@ class VetCareApp(tk.Tk):
         if self.current_screen:
             self.current_screen.destroy()
         screen_class = NAV_ITEMS[index][2]
+        settings_index = next((i for i, (_, __, cls) in enumerate(NAV_ITEMS) if cls == SettingsScreen), None)
         if screen_class == DashboardScreen:
             self.current_screen = DashboardScreen(self.content_frame, navigate=self._show_screen)
+        elif screen_class == ChatbotScreen:
+            self.current_screen = ChatbotScreen(
+                self.content_frame,
+                navigate=self._show_screen,
+                settings_index=settings_index,
+            )
         else:
             self.current_screen = screen_class(self.content_frame)
         self.current_screen.pack(fill="both", expand=True)
