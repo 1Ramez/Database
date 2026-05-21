@@ -5,7 +5,10 @@ import urllib.request
 
 
 class GeminiError(RuntimeError):
-    pass
+    def __init__(self, message: str, code: int | None = None, detail: str | None = None):
+        super().__init__(message)
+        self.code = code
+        self.detail = detail
 
 
 class GeminiClient:
@@ -60,7 +63,7 @@ class GeminiClient:
                 detail = e.read().decode("utf-8", errors="replace")
             except Exception:
                 detail = str(e)
-            raise GeminiError(f"Gemini API error ({e.code}): {detail}") from e
+            raise GeminiError(f"Gemini API error ({e.code}).", code=e.code, detail=detail) from e
         except urllib.error.URLError as e:
             raise GeminiError(f"Network error calling Gemini API: {e}") from e
 
@@ -75,4 +78,3 @@ class GeminiClient:
             return text
         except Exception as e:
             raise GeminiError(f"Unexpected Gemini response: {data}") from e
-

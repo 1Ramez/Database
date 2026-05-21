@@ -2,8 +2,9 @@ import tkinter as tk
 import threading
 
 import screens.darkMode_Style as t
-from services.settings_store import load_settings
+from services.settings_store import load_settings, GEMINI_MODEL, FALLBACK_GEMINI_MODEL
 from services.gemini_client import GeminiClient, GeminiError
+from services.db_assistant import try_answer_from_db, db_summary
 
 
 class ChatbotScreen(tk.Frame):
@@ -12,6 +13,7 @@ class ChatbotScreen(tk.Frame):
         self._navigate = navigate
         self._settings_index = settings_index
         self._messages = []
+        self._send_btn_text = "Send"
         self._build_ui()
 
     def _build_ui(self):
@@ -60,7 +62,21 @@ class ChatbotScreen(tk.Frame):
 
         self._append("Assistant", "Hi! Add your Gemini API key from Settings, then ask me anything.", role="assistant")
 
-        input_row = tk.Frame(outer, bg=t.BG_SECONDARY)
+        bottom = tk.Frame(outer, bg=t.BG_SECONDARY)
+        bottom.pack(fill="x")
+
+        # Status above the input row to avoid being clipped at the bottom of the window.
+        self.status_lbl = tk.Label(
+            bottom,
+            text="",
+            bg=t.BG_SECONDARY,
+            fg=t.TEXT_MUTED,
+            font=t.FONT_SMALL,
+            anchor="w",
+        )
+        self.status_lbl.pack(fill="x", pady=(0, 6))
+
+        input_row = tk.Frame(bottom, bg=t.BG_SECONDARY)
         input_row.pack(fill="x")
 
         self.input_var = tk.StringVar()
@@ -68,11 +84,8 @@ class ChatbotScreen(tk.Frame):
         self.input_entry.pack(side="left", fill="x", expand=True, ipady=8)
         self.input_entry.bind("<Return>", lambda e: self._send())
 
-        self.send_btn = tk.Button(input_row, text="Send", **t.BTN_PRIMARY, command=self._send)
+        self.send_btn = tk.Button(input_row, text=self._send_btn_text, width=12, **t.BTN_PRIMARY, command=self._send)
         self.send_btn.pack(side="left", padx=(10, 0))
-
-        self.status_lbl = tk.Label(outer, text="", bg=t.BG_SECONDARY, fg=t.TEXT_MUTED, font=t.FONT_SMALL, anchor="w")
-        self.status_lbl.pack(fill="x", pady=(8, 0))
 
     def _go_settings(self):
         if self._navigate and isinstance(self._settings_index, int):
@@ -103,27 +116,48 @@ class ChatbotScreen(tk.Frame):
         self._messages.append({"role": "user", "text": text})
         self._append("You", text, role="user")
 
-        self.send_btn.configure(state="disabled")
+        self.send_btn.configure(state="disabled", text="Thinking...")
         self.status_lbl.configure(text="Thinking...", fg=t.TEXT_MUTED)
+
+        # First: deterministic answers from the live SQL Server DB (prevents hallucinated/fake data).
+        db_answer = try_answer_from_db(text)
+        if db_answer:
+            self._messages.append({"role": "assistant", "text": db_answer})
+            self._done(db_answer)
+            return
 
         settings = load_settings()
         api_key = (settings.gemini_api_key or "").strip()
-        model = (settings.gemini_model or "gemini-1.5-flash").strip()
+        model = GEMINI_MODEL
+        snapshot = db_summary()
 
         def work():
             try:
-                client = GeminiClient(api_key=api_key, model=model)
-                reply = client.generate_reply(
-                    self._messages,
-                    system_instruction=(
-                        "You are a helpful assistant inside a veterinary clinic database app. "
-                        "Be concise and practical."
-                    ),
+                reply = ""
+                system_instruction = (
+                    "You are a helpful assistant inside a veterinary clinic database app.\n"
+                    "IMPORTANT:\n"
+                    "- Do NOT invent numbers, names, or records.\n"
+                    "- If the user asks about database contents, answer only using the DB snapshot below.\n"
+                    "- If the snapshot is insufficient, say what filter you need (date range, pet name, vet name, clinic).\n\n"
+                    f"{snapshot}\n"
                 )
+
+                try:
+                    client = GeminiClient(api_key=api_key, model=model)
+                    reply = client.generate_reply(self._messages, system_instruction=system_instruction)
+                except GeminiError as e:
+                    if e.code == 404:
+                        client = GeminiClient(api_key=api_key, model=FALLBACK_GEMINI_MODEL)
+                        reply = client.generate_reply(self._messages, system_instruction=system_instruction)
+                    else:
+                        raise
                 self._messages.append({"role": "assistant", "text": reply})
                 self.after(0, lambda: self._done(reply))
             except GeminiError as e:
-                self.after(0, lambda: self._error(str(e)))
+                detail = (e.detail or "").strip()
+                full = f"{e} {detail}".strip() if detail else str(e)
+                self.after(0, lambda: self._error(full))
             except Exception as e:
                 self.after(0, lambda: self._error(f"Unexpected error: {e}"))
 
@@ -131,11 +165,10 @@ class ChatbotScreen(tk.Frame):
 
     def _done(self, reply: str):
         self._append("Assistant", reply, role="assistant")
-        self.send_btn.configure(state="normal")
+        self.send_btn.configure(state="normal", text=self._send_btn_text)
         self.status_lbl.configure(text="", fg=t.TEXT_MUTED)
 
     def _error(self, msg: str):
         self._append("Assistant", msg, role="assistant")
-        self.send_btn.configure(state="normal")
+        self.send_btn.configure(state="normal", text=self._send_btn_text)
         self.status_lbl.configure(text="Failed.", fg=t.DANGER)
-
